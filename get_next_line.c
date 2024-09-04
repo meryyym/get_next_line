@@ -49,6 +49,8 @@ char	*cutlines(char *book)
 	while (book[i] && book[i] != '\n')
 		i++;
 	line = malloc(i + 2);
+	if (!line)
+		return (NULL);
 	i = 0;
 	while (book[i] && book[i] != '\n')
 	{
@@ -99,20 +101,3 @@ char	*get_next_line(int fd)
 	book = bookwhitoutline(book);
 	return (line);
 }
-/*int	main(void)
-{
-	int		fd;
-	char	*line;
-	int		lines;
-
-	lines = 1;
-	fd = open("texto.txt", O_RDONLY);
-	//line = get_next_line(fd);
-	//printf("RESULTADO\n%s\n", line);
-	while ((line = get_next_line(fd)))
-		printf("%d -> %s\n", lines++, line);
-	//printf("%s%s", get_next_line(fd), get_next_line(fd));
-	//printf("%s", get_next_line(fd));
-	close(fd);
-	return (0);
-}*/

@@ -12,120 +12,103 @@
 
 #include "get_next_line_bonus.h"
 
-char	*bookwhitoutline(char *book)
+char	*ft_free(char *buffer, char *buf)
 {
-	char	*newbook;
-	int		i;
-	int		j;
+	char	*j;
 
-	i = 0;
-	newbook = NULL;
-	if (!book)
-		return (NULL);
-	while (book[i] && book[i] != '\n')
-		i++;
-	if (book[i] == '\0')
-		return (free(book), book = NULL, NULL);
-	newbook = malloc(ft_strlen(book) - i + 1);
-	if (!newbook)
-		return (free(newbook), NULL);
-	i++;
-	j = 0;
-	while (book[i])
-		newbook[j++] = book[i++];
-	newbook[j] = '\0';
-	free(book);
-	return (newbook);
+	j = ft_strjoin(buffer, buf);
+	free(buffer);
+	return (buffer = NULL, j);
 }
 
-char	*cutlines(char *book)
+char	*ft_line(char *buffer)
 {
 	char	*line;
-	int		i;
+	size_t	i;
 
 	i = 0;
-	if (!book)
+	if (!buffer[i])
 		return (NULL);
-	while (book[i] && book[i] != '\n')
+	while (buffer[i] && buffer[i] != '\n')
 		i++;
-	line = malloc(i + 2);
+	line = ft_calloc(i + 2, sizeof(char));
 	i = 0;
-	while (book[i] && book[i] != '\n')
+	while (buffer[i] && buffer[i] != '\n')
 	{
-		line[i] = book[i];
+		line[i] = buffer[i];
 		i++;
 	}
-	if (book[i] == '\n')
+	if (buffer[i] && buffer[i] == '\n')
 	{
 		line[i] = '\n';
 		i++;
 	}
-	line[i] = '\0';
 	return (line);
 }
 
-char	*readbook(int fd, char *book)
+char	*ft_read_file(int fd, char *mem)
 {
 	char	*buffer;
-	int		size;
+	int		bytes;
 
-	size = 1;
-	while (size > 0 && !ft_strchr(book, '\n'))
+	if (!mem)
+		mem = ft_calloc(1, 1);
+	buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
+	bytes = 1;
+	if (fd < 0)
+		return (NULL);
+	while (bytes > 0)
 	{
-		buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
-		if (!buffer)
-			return (NULL);
-		size = read(fd, buffer, BUFFER_SIZE);
-		if (size == -1)
-			return (free(buffer), free(book), book = NULL, NULL);
-		buffer[size] = '\0';
-		book = ft_strjoin(book, buffer);
-		free (buffer);
+		bytes = read(fd, buffer, BUFFER_SIZE);
+		if (bytes < 0)
+		{
+			if (mem)
+				free(mem);
+			free(buffer);
+			return (buffer = NULL, NULL);
+		}
+		buffer[bytes] = '\0';
+		mem = ft_free(mem, buffer);
+		if (ft_strchr(buffer, '\n'))
+			break ;
 	}
-	return (book);
+	return (free(buffer), mem);
+}
+
+char	*ft_next(char *buffer)
+{
+	int		i;
+	int		j;
+	char	*line;
+
+	i = 0;
+	while (buffer[i] && buffer[i] != '\n')
+		i++;
+	if (!buffer[i])
+	{
+		free (buffer);
+		return (buffer = NULL, NULL);
+	}
+	line = ft_calloc((ft_strlen(buffer) - i + 1), sizeof (char));
+	i++;
+	j = 0;
+	while (buffer[i])
+		line[j++] = buffer[i++];
+	free(buffer);
+	return (buffer = NULL, line);
 }
 
 char	*get_next_line(int fd)
 {
-	static char	*book[OPEN_MAX];
+	static char	*buffer[1024];
 	char		*line;
 
-	if (fd < 0 || BUFFER_SIZE <= 0 || fd > OPEN_MAX)
+	if (fd < 0 || BUFFER_SIZE <= 0)
 		return (NULL);
-	book[fd] = readbook(fd, book[fd]);
-	if (!book[fd] || book[fd][0] == '\0')
-		return (free(book[fd]), book[fd] = NULL, NULL);
-	line = cutlines(book[fd]);
-	book[fd] = bookwhitoutline(book[fd]);
+	buffer[fd] = ft_read_file(fd, buffer[fd]);
+	if (!buffer[fd])
+		return (NULL);
+	line = ft_line(buffer[fd]);
+	buffer[fd] = ft_next(buffer[fd]);
 	return (line);
 }
-/*int	main(void)
-{
-	int		fd1;
-	int		fd2;
-	int		fd3;
-	char	*line;
-	int		lines;
-
-	lines = 1;
-	fd1 = open("texto1.txt", O_RDONLY);
-	fd2 = open("texto2.txt", O_RDONLY);
-	fd3 = open("texto3.txt", O_RDONLY);
-	while (lines <= 3)
-	{
-		line = get_next_line(fd1);
-		printf("%d->%s\n", lines, line);
-		free(line);
-		line = get_next_line(fd2);
-		printf("%d->%s\n", lines, line);
-		free(line);
-		line = get_next_line(fd3);
-		printf("%d->%s\n", lines, line);
-		free(line);
-		lines++;
-	}
-	close(fd1);
-	close(fd2);
-	close(fd3);
-	return (0);
-}*/
